@@ -47,6 +47,16 @@
     <script type="module"  src="./index.js"></script> 
 
     <script>
+      let currentProgress = 0; // Tracks overall progress (0% - 100%)
+    
+      function updateProgress(percent) {
+        currentProgress = percent;
+        progressbar.style.setProperty("--progress", `${percent}%`);
+      }
+    </script>
+
+    <script>
+      
 
       function clearCache() {
         o = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -117,33 +127,46 @@
    
     <script>
       //##################  bind #############
-    async function loadAndCombineChunks(chunkUrls) {
-      // Fetch all chunks
-      const chunkPromises = chunkUrls.map((url) =>
-        fetch(url).then((response) => {
+    async function loadAndCombineChunks(chunkUrls, onProgress) {
+      const combinedBuffer = [];
+      const totalChunks = chunkUrls.length;
+      const progressPerChunk = 95 / totalChunks; // Each chunk contributes to 5% if 19 chunks
+
+      for (let i = 0; i < totalChunks; i++) {
+        const url = chunkUrls[i];
+        try {
+          const response = await fetch(url);
           if (!response.ok) {
             throw new Error(`Failed to load chunk: ${url}`);
           }
-          return response.arrayBuffer(); // Load as binary data
-        })
-      );
+          const chunk = await response.arrayBuffer();
+          combinedBuffer.push(new Uint8Array(chunk));
 
-      // Wait for all chunks to be downloaded
-      const chunks = await Promise.all(chunkPromises);
+          // Update progress after each chunk
+          currentProgress += progressPerChunk;
+          // Ensure that progress does not exceed 95%
+          if (currentProgress > 95) currentProgress = 95;
+          onProgress(currentProgress);
+        } catch (error) {
+          console.error(`Error loading chunk ${url}:`, error);
+          // Optionally, you can retry fetching the chunk or notify the user
+          throw error; // Re-throw to be caught in the main IIFE
+        }
+      }
 
-      // Combine chunks into a single ArrayBuffer
-      const totalSize = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-      const combinedBuffer = new Uint8Array(totalSize);
-
+      // Combine all chunks into a single Uint8Array
+      const totalSize = combinedBuffer.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+      const combined = new Uint8Array(totalSize);
       let offset = 0;
-      for (const chunk of chunks) {
-        combinedBuffer.set(new Uint8Array(chunk), offset);
+      for (const chunk of combinedBuffer) {
+        combined.set(chunk, offset);
         offset += chunk.byteLength;
       }
 
       // Return the combined buffer as a Blob URL
-      return URL.createObjectURL(new Blob([combinedBuffer], { type: 'application/octet-stream' }));
+      return URL.createObjectURL(new Blob([combined], { type: 'application/octet-stream' }));
     }
+
       //######################################
     </script>
     <script>
