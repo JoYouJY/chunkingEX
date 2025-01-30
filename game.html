@@ -130,44 +130,66 @@
 
     <script>
 
-      var progressvalue = 0;
+      var progressValue = 0;
       //##################  bind #############
       async function loadAndCombineChunks(chunkUrls) {
-        // Artificial 7-second delay for demonstration
-        console.log("###########################3 second passing");
+        console.log("Starting to load and combine chunks...");
+        
+        // Artificial 3-second delay for demonstration purposes
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
-        // Fetch all chunks
-        const chunkPromises = chunkUrls.map((url) =>
-          fetch(url).then((response) => {
-            if (!response.ok) {
-              throw new Error(`Failed to load chunk: ${url}`);
-            }
-            progressvalue += (100/19);
-            document.querySelector(".progress").style.setProperty("--progress", `${progressvalue}%`);
+        const totalChunks = chunkUrls.length;
+        let progressValue = 0;
+        const chunks = new Array(totalChunks); // To maintain the order of chunks
 
-            return response.arrayBuffer(); // Load as binary data
-          })
+        // Function to update the progress bar
+        const updateProgress = () => {
+          document.querySelector(".progress").style.setProperty("--progress", `${progressValue}%`);
+        };
+
+        // Create an array of promises with individual progress updates
+        const chunkPromises = chunkUrls.map((url, index) =>
+          fetch(url)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`Failed to load chunk: ${url}`);
+              }
+              return response.arrayBuffer();
+            })
+            .then((data) => {
+              chunks[index] = data; // Store the chunk in the correct order
+              progressValue += (100 / totalChunks);
+              updateProgress(); // Update the progress bar
+              console.log(`Chunk ${index + 1}/${totalChunks} loaded. Progress: ${progressValue.toFixed(2)}%`);
+            })
         );
 
-        // Wait for all chunks to be downloaded
-        const chunks = await Promise.all(chunkPromises);
-        
-        // Combine chunks into a single ArrayBuffer
+        try {
+          // Wait for all chunks to be fetched
+          await Promise.all(chunkPromises);
+          console.log("All chunks have been successfully loaded.");
+        } catch (error) {
+          console.error("Error combining chunks:", error);
+          throw error; // Re-throw the error after logging it
+        }
+
+        // Combine all chunks into a single ArrayBuffer
         const totalSize = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
         const combinedBuffer = new Uint8Array(totalSize);
-
         let offset = 0;
+
         for (const chunk of chunks) {
           combinedBuffer.set(new Uint8Array(chunk), offset);
           offset += chunk.byteLength;
         }
 
-        // Return the combined buffer as a Blob URL
-        return URL.createObjectURL(
-          new Blob([combinedBuffer], { type: "application/octet-stream" })
-        );
+        // Create a Blob URL from the combined buffer
+        const combinedBlob = new Blob([combinedBuffer], { type: "application/octet-stream" });
+        const combinedDataUrl = URL.createObjectURL(combinedBlob);
+
+        return combinedDataUrl;
       }
+
       //######################################
     </script>
 
@@ -203,7 +225,7 @@
         var warningBanner = document.querySelector("#unity-warning");
         const progressbar = document.querySelector(".progress");
         
-        progressbar.style.setProperty("--progress", `${progressvalue}%`);
+        progressbar.style.setProperty("--progress", `${progressValue}%`);
 
         // Wrap everything in an async IIFE to await chunk loading
         (async () => {
