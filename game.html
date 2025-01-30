@@ -129,11 +129,13 @@
     </script>
 
     <script>
+
+      var progressvalue = 0;
       //##################  bind #############
       async function loadAndCombineChunks(chunkUrls) {
         // Artificial 7-second delay for demonstration
-        //console.log("###########################5 second passing");
-        //await new Promise((resolve) => setTimeout(resolve, 5000));
+        console.log("###########################3 second passing");
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         // Fetch all chunks
         const chunkPromises = chunkUrls.map((url) =>
@@ -141,13 +143,16 @@
             if (!response.ok) {
               throw new Error(`Failed to load chunk: ${url}`);
             }
+            progressvalue += (100/19);
+            document.querySelector(".progress").style.setProperty("--progress", `${progressvalue}%`);
+
             return response.arrayBuffer(); // Load as binary data
           })
         );
 
         // Wait for all chunks to be downloaded
         const chunks = await Promise.all(chunkPromises);
-
+        
         // Combine chunks into a single ArrayBuffer
         const totalSize = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
         const combinedBuffer = new Uint8Array(totalSize);
@@ -197,6 +202,8 @@
         var loadingBar = document.querySelector("#unity-loading-bar");
         var warningBanner = document.querySelector("#unity-warning");
         const progressbar = document.querySelector(".progress");
+        
+        progressbar.style.setProperty("--progress", `${progressvalue}%`);
 
         // Wrap everything in an async IIFE to await chunk loading
         (async () => {
@@ -278,11 +285,12 @@
           var script = document.createElement("script");
           script.src = loaderUrl;
 
+          
           script.onload = () => {
             createUnityInstance(canvas, config, (progress) => {
               // Update your CSS-based progress bar
-              const value = Math.floor(progress * 100);
-              progressbar.style.setProperty("--progress", `${value}%`);
+              ////const value = Math.floor(progress * 100);
+              ////progressbar.style.setProperty("--progress", `${value}%`);
             })
               .then((unityInstance) => {
                 window.unityInstance = unityInstance;
@@ -294,6 +302,7 @@
                 alert(message);
               });
           };
+          
 
           document.body.appendChild(script);
         })(); // end of async block
