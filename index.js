@@ -1093,7 +1093,7 @@ async function GetUserInfo(user) {
 
 
 auth.onAuthStateChanged(user => {
-
+  
   if (user){
     response(response_type.GOOGLE_IS_SIGNIN);
     console.log("[____] GOOGLE_IS_SIGNIN")
