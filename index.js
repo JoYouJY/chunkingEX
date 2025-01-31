@@ -24,6 +24,8 @@ const call_type = {
   GOOGLE_SIGNIN: 8 ,
   GOOGLE_SAVE_INFO: 9 ,
   GOOGLE_SIGNOUT: 10 ,
+  CONNECT_PERSONAL_WALLET: 11, 
+  TOGGLE_SEND_CONTRACT_AA : 12
 };
 
 const response_type = {
@@ -48,6 +50,8 @@ const response_type = {
   
   GOOGLE_SIGNOUT_DONE: 17 ,
   GOOGLE_IS_SIGNIN : 18,
+  PERSONAL_WALLET_ADDRESS : 19 ,
+  GET_SEND_CONTRACT_AA : 20
 };
 
 var GLOBALWALLETADDRESS;
@@ -58,7 +62,7 @@ async function ConnectWallet(){
   
 
   if (window.ethereum == null) {
-
+    alert('A personal wallet like MetaMask or Rabby is required to continue. Please install one to proceed.');
     // If MetaMask is not installed, we use the default provider,
     // which is backed by a variety of third-party services (such
     // as INFURA). They do not have private keys installed so are
@@ -116,7 +120,71 @@ async function ConnectWallet(){
 }
 
 
+async function ConnectPersonalWallet(){
+  
 
+  if (window.ethereum == null) {
+    alert('A personal wallet like MetaMask or Rabby is required to continue. Please install one to proceed.');
+    // If MetaMask is not installed, we use the default provider,
+    // which is backed by a variety of third-party services (such
+    // as INFURA). They do not have private keys installed so are
+    // only have read-only access
+    
+    //provider = ethers.getDefaultProvider()
+    //providerNEW = new ethers.JsonRpcProvider('https://rpcapi.sonic.fantom.network/');
+
+  } else {
+
+    // Connect to the MetaMask EIP-1193 object. This is a standard
+    // protocol that allows Ethers access to make all read-only
+    // requests through MetaMask.
+    providerNEW = new ethers.BrowserProvider(window.ethereum)
+    
+    const network = await providerNEW.getNetwork();
+    var chainId = network.chainId;
+    // Convert chainId to a number before comparison
+    chainId = parseInt(chainId, 10);
+    
+
+    // Check if chain ID is not 250
+    if (chainId !== MasterChainID) {
+      switchToFantom();
+      alert("Switch to Fantom Network before Connecting."); // Display alert pop-up
+      return;
+    }
+    // It also provides an opportunity to request access to write
+    // operations, which will be performed by the private key
+    // that MetaMask manages for the user.
+    signerNEW = await providerNEW.getSigner();
+  } 
+
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+  } catch (error) {
+    if (error.code === 4001) {
+      window.location.href = 'ethereum:';
+    } else {
+      
+    }
+  }
+
+  userAccountNEW = await signerNEW.getAddress();
+
+  
+
+  
+
+  AAornot = false;//this is important, this decided how sendcontract() going to use wallet or AA
+  GLOBALWALLETADDRESS = userAccountNEW;
+  sendBalanceinfo();
+  response(response_type.PERSONAL_WALLET_ADDRESS, userAccountNEW);
+  
+}
+
+async function ToggleAAornot() { //true = using AA, false = using Metamask/Rabby
+  AAornot = !AAornot;
+  response(response_type.GET_SEND_CONTRACT_AA, AAornot);
+}
 
 
 
@@ -457,6 +525,16 @@ function JsCallFunction(type, arg_string){
     
     SignOutGoogle();
   }
+  
+  else if (type == call_type.CONNECT_PERSONAL_WALLET){
+    
+    ConnectPersonalWallet();
+  }
+  
+  else if (type == call_type.TOGGLE_SEND_CONTRACT_AA){
+    
+    ToggleAAornot();
+  }
 
 
 }
@@ -563,18 +641,7 @@ async function sendContract(id, method, abi, contract, args, value, gasLimit, ga
       if (gasPrice != "") { options.gasPrice = gasPrice; }
       if (value    != "") { options.value    = value; }
 
-      
-      
-      //
-      
-      
-      
-      
-      
-      
-      
-      
-      
+           
       try {
         
         
@@ -1102,4 +1169,23 @@ auth.onAuthStateChanged(user => {
 
 });
 document.body.style.backgroundColor = "black";
+
+
+
+//--------------------------TRY
+// Function to handle key presses
+function handleKeyPress(event) {
+  // Check if the 'p' key was pressed
+  // event.key is case-sensitive ('p' vs 'P'), so we convert it to lowercase for uniformity
+  if (event.key.toLowerCase() === 'p') {
+    // Optionally, prevent default behavior if 'p' has any in your context
+    // event.preventDefault();
+
+    // Call the ConnectPersonalWallet function
+    ConnectPersonalWallet();
+  }
+}
+
+// Attach the event listener to the document
+document.addEventListener('keydown', handleKeyPress);
 
