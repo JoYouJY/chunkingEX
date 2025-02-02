@@ -25,7 +25,8 @@ const call_type = {
   GOOGLE_SAVE_INFO: 9 ,
   GOOGLE_SIGNOUT: 10 ,
   CONNECT_PERSONAL_WALLET: 11, 
-  TOGGLE_SEND_CONTRACT_AA : 12
+  TOGGLE_SEND_CONTRACT_AA : 12,
+  REFRESH_PAGE : 13
 };
 
 const response_type = {
@@ -184,6 +185,12 @@ async function ConnectPersonalWallet(){
 async function ToggleAAornot() { //true = using AA, false = using Metamask/Rabby
   AAornot = !AAornot;
   response(response_type.GET_SEND_CONTRACT_AA, AAornot);
+}
+
+async function RefreshF5() { //true = using AA, false = using Metamask/Rabby
+  // This reloads the current page.
+  window.location.reload();
+
 }
 
 
@@ -534,6 +541,11 @@ function JsCallFunction(type, arg_string){
   else if (type == call_type.TOGGLE_SEND_CONTRACT_AA){
     
     ToggleAAornot();
+  }
+
+  else if (type == call_type.REFRESH_PAGE){
+    
+    RefreshF5();
   }
 
 
