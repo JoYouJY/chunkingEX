@@ -26,7 +26,8 @@ const call_type = {
   GOOGLE_SIGNOUT: 10 ,
   CONNECT_PERSONAL_WALLET: 11, 
   TOGGLE_SEND_CONTRACT_AA : 12,
-  REFRESH_PAGE : 13
+  REFRESH_PAGE : 13,
+  ON_UNITY_LOADED : 14
 };
 
 const response_type = {
@@ -534,7 +535,6 @@ function JsCallFunction(type, arg_string){
   }
   
   else if (type == call_type.CONNECT_PERSONAL_WALLET){
-    
     ConnectPersonalWallet();
   }
   
@@ -548,6 +548,10 @@ function JsCallFunction(type, arg_string){
     RefreshF5();
   }
 
+  else if (type == call_type.ON_UNITY_LOADED){
+    
+    OnUnityLoaded();
+  }
 
 }
 window.JsCallFunction = JsCallFunction;
@@ -1182,22 +1186,11 @@ auth.onAuthStateChanged(user => {
 });
 document.body.style.backgroundColor = "black";
 
-
-
-//--------------------------TRY
-// Function to handle key presses
-function handleKeyPress(event) {
-  // Check if the 'p' key was pressed
-  // event.key is case-sensitive ('p' vs 'P'), so we convert it to lowercase for uniformity
-  if (event.key.toLowerCase() === 'p') {
-    // Optionally, prevent default behavior if 'p' has any in your context
-    // event.preventDefault();
-
-    // Call the ConnectPersonalWallet function
-    ConnectPersonalWallet();
+async function OnUnityLoaded() {
+  if (user) {
+    response(response_type.GOOGLE_IS_SIGNIN);
+    console.log("[OnUnityLoaded] GOOGLE_IS_SIGNIN");
   }
 }
 
-// Attach the event listener to the document
-document.addEventListener('keydown', handleKeyPress);
 
