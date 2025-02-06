@@ -285,7 +285,7 @@ async function CreateAndConnectWeb2Wallet(fkey,pass){
   
   const faucet_master = new ethers.Wallet(fkey, AA_provider);
   
-  const faucetContractAddress = '0xDCF9127a59169d889b1beC8e8148Dcc3DB66f994';
+  const faucetContractAddress = '0x63e740153Edc6cdFe768E1e6b487Bc311A08343b';
   const faucetABI = [
     {
       "inputs": [
