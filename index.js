@@ -430,8 +430,8 @@ function EnterFullScreen(){
 function JsCallFunction(type, arg_string){
   
   
-  
 
+  console.log(`JsCallFunction type=${type}`);
 
   if(type == call_type.CONNECT){    
     ConnectWallet();  
@@ -1067,7 +1067,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig); 
 const auth = getAuth(app); 
-const user = auth.currentUser;
 const db = getFirestore(app);
 const google_provider = new GoogleAuthProvider();
 
@@ -1182,15 +1181,16 @@ auth.onAuthStateChanged(user => {
     console.log("[____] GOOGLE_IS_SIGNIN")
   }
   
-
 });
 document.body.style.backgroundColor = "black";
 
 async function OnUnityLoaded() {
-  if (user) {
+  console.log("OnUnityLoaded()")
+  if (auth.currentUser) {
     response(response_type.GOOGLE_IS_SIGNIN);
     console.log("[OnUnityLoaded] GOOGLE_IS_SIGNIN");
   }
+
 }
 
 
